@@ -181,3 +181,77 @@ Priority: u=0, i
 This is great. As you can see in the output, we are getting tons of information. Will have to close connection after it accepts, while in the testing stages at least, until we have parameters that decide when the connection closes.
 
 I think I should integrate a while loop, that will run infinitely, that way the socket keeps accepting connections
+Updated code with while loop:
+```cpp
+  1 #include <cstdio>
+  2 #include <sys/socket.h>
+  3 #include <unistd.h>
+  4 #include <netinet/in.h>
+  5
+  6 int main () {
+  7
+  8 //This will establish a socket connection
+  9
+ 10 int server = socket(AF_INET, SOCK_STREAM, 0);
+ 11
+ 12 struct sockaddr_in address;
+ 13 address.sin_family  = AF_INET;
+ 14 address.sin_addr.s_addr  = INADDR_ANY;
+ 15 address.sin_port = htons(8080);
+ 16
+ 17 bind(server, (struct sockaddr*)&address, sizeof(address));
+ 18 listen(server, 3);
+ 19
+ 20 while (true) {
+ 21 printf("Server is listening on http://localhost:8080\n");
+ 22
+ 23 int client_accept = accept(server, NULL, NULL);
+ 24
+ 25 char buffer[1024];
+ 26 read(client_accept, buffer, 1024);
+ 27
+ 28 printf("Received request:\n%s\n", buffer);
+ 29
+ 30 close(client_accept);
+ 31 }
+ 32
+ 33 }
+ ```
+ Updated output.
+ Tried multiple refreshes on web browser to see if while loop keeps request going.
+ ```output
+ lucasfield@Lucass-MacBook-Air-3 csci330_http_server % ./main
+Server is listening on http://localhost:8080
+Received request:
+GET / HTTP/1.1
+Host: localhost:8080
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:143.0) Gecko/20100101 Firefox/143.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br, zstd
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: none
+Sec-Fetch-User: ?1
+Priority: u=0, i
+
+
+Server is listening on http://localhost:8080
+Received request:
+GET / HTTP/1.1
+Host: localhost:8080
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:143.0) Gecko/20100101 Firefox/143.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br, zstd
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: none
+Sec-Fetch-User: ?1
+Priority: u=0, i
+```
+Several more requests, which is good that means it is working as it is supposed to.
