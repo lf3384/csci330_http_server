@@ -17,6 +17,7 @@ address.sin_port = htons(8080);
 bind(server, (struct sockaddr*)&address, sizeof(address));
 listen(server, 3);
 
+while (true) {
 printf("Server is listening on http://localhost:8080\n");
 
 int client_accept = accept(server, NULL, NULL);
@@ -27,4 +28,6 @@ read(client_accept, buffer, 1024);
 printf("Received request:\n%s\n", buffer);
 
 close(client_accept);
+}
+
 }
