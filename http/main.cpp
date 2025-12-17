@@ -1,327 +1,42 @@
-#include <cstdio>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <cstdlib>
+#include <iostream>
+#include <csignal>
+#include "ConfigManager.h"
+#include "HTTPServer.h"
 
-struct HTTPRequest {
-    char method[16];
-    char path[256];
-    char version[16];
-};
+// Global server pointer for signal handler
+HTTPServer* globalServer = nullptr;
 
-bool parse_http_request(const char* buffer, HTTPRequest* request) {
-    int parsed = sscanf(buffer, "%15s %255s %15s",
-                        request->method,
-                        request->path,
-                        request->version);
-    return parsed == 3;
+void signalHandler(int signum) {
+    std::cout << "\nInterrupt signal (" << signum << ") received." << std::endl;
+    if (globalServer) {
+        globalServer->stop();
+    }
+    exit(signum);
 }
 
-// Function to validate
-bool is_safe_path(const char* path) {
-    if (strstr(path, "..") != NULL) {
-        return false;
+int main(int argc, char* argv[]) {
+    // Register signal handler for Ctrl+C
+    signal(SIGINT, signalHandler);
+
+    // Get configuration manager instance
+    ConfigManager* config = ConfigManager::getInstance();
+
+    // Load configuration from file
+    std::string configFile = "config.ini";
+    if (argc > 1) {
+        configFile = argv[1];
     }
 
+    config->loadConfig(configFile);
+    config->printConfig();
 
-    if (path[0] != '/') {
-        return false;
-    }
+    // Create and start server
+    HTTPServer server;
+    server.setConfig(config);
 
-    // Check for null
-    size_t path_len = strlen(path);
-    for (size_t i = 0; i < path_len; i++) {
-        if (path[i] == '\0' && i < path_len - 1) {
-            return false;
-        }
-    }
+    globalServer = &server;
 
-    return true;
-}
+    server.start();
 
-const char* get_mime_type(const char* path) {
-    const char* ext = strrchr(path, '.');
-    if (!ext) return "application/octet-stream";
-
-    if (strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0) return "text/html";
-    if (strcmp(ext, ".css") == 0) return "text/css";
-    if (strcmp(ext, ".js") == 0) return "application/javascript";
-    if (strcmp(ext, ".json") == 0) return "application/json";
-    if (strcmp(ext, ".png") == 0) return "image/png";
-    if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0) return "image/jpeg";
-    if (strcmp(ext, ".gif") == 0) return "image/gif";
-    if (strcmp(ext, ".txt") == 0) return "text/plain";
-
-    return "application/octet-stream";
-}
-
-char* read_file(const char* filepath, size_t* file_size) {
-    int fd = open(filepath, O_RDONLY);
-    if (fd < 0) return NULL;
-
-    struct stat file_stat;
-    if (fstat(fd, &file_stat) < 0) {
-        close(fd);
-        return NULL;
-    }
-
-    if (S_ISDIR(file_stat.st_mode)) {
-        close(fd);
-        return NULL;
-    }
-
-    *file_size = file_stat.st_size;
-
-
-    if (*file_size > 10 * 1024 * 1024) {
-        close(fd);
-        return NULL;
-    }
-
-    char* content = (char*)malloc(*file_size + 1);
-    if (!content) {
-        close(fd);
-        return NULL;
-    }
-
-    ssize_t bytes_read = read(fd, content, *file_size);
-    close(fd);
-
-    if (bytes_read != (ssize_t)*file_size) {
-        free(content);
-        return NULL;
-    }
-
-    content[*file_size] = '\0';
-    return content;
-}
-
-void send_response(int client_socket, int status_code, const char* status_text,
-                   const char* content_type, const char* body, size_t body_length) {
-    char header[2048];
-    snprintf(header, sizeof(header),
-        "HTTP/1.1 %d %s\r\n"
-        "Content-Type: %s\r\n"
-        "Content-Length: %zu\r\n"
-        "Connection: close\r\n"
-        "\r\n",
-        status_code, status_text, content_type, body_length
-    );
-
-    write(client_socket, header, strlen(header));
-    if (body && body_length > 0) {
-        write(client_socket, body, body_length);
-    }
-}
-
-void send_404(int client_socket, const char* path) {
-    char body[2048];
-    snprintf(body, sizeof(body),
-        "<!DOCTYPE html>"
-        "<html lang=\"en\">"
-        "<head>"
-        "<meta charset=\"UTF-8\">"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-        "<title>404 Not Found</title>"
-        "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
-        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
-        "</head>"
-        "<body class=\"bg-light\">"
-        "<div class=\"container\">"
-        "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
-        "<div class=\"col-md-6\">"
-        "<div class=\"card shadow text-center\">"
-        "<div class=\"card-body p-5\">"
-        "<i class=\"bi bi-exclamation-triangle text-warning\" style=\"font-size: 4rem;\"></i>"
-        "<h1 class=\"display-4 mt-3\">404</h1>"
-        "<h2 class=\"h4 text-muted\">Not Found</h2>"
-        "<p class=\"mt-3\">The requested file <code class=\"text-danger\">%s</code> was not found on this server.</p>"
-        "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
-        "</div></div></div></div></div>"
-        "</body></html>",
-        path
-    );
-    send_response(client_socket, 404, "Not Found", "text/html", body, strlen(body));
-}
-
-void send_403(int client_socket, const char* path) {
-    char body[2048];
-    snprintf(body, sizeof(body),
-        "<!DOCTYPE html>"
-        "<html lang=\"en\">"
-        "<head>"
-        "<meta charset=\"UTF-8\">"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-        "<title>403 Forbidden</title>"
-        "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
-        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
-        "</head>"
-        "<body class=\"bg-light\">"
-        "<div class=\"container\">"
-        "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
-        "<div class=\"col-md-6\">"
-        "<div class=\"card shadow text-center\">"
-        "<div class=\"card-body p-5\">"
-        "<i class=\"bi bi-shield-lock text-danger\" style=\"font-size: 4rem;\"></i>"
-        "<h1 class=\"display-4 mt-3\">403</h1>"
-        "<h2 class=\"h4 text-muted\">Forbidden</h2>"
-        "<p class=\"mt-3\">Access to <code class=\"text-danger\">%s</code> is forbidden.</p>"
-        "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
-        "</div></div></div></div></div>"
-        "</body></html>",
-        path
-    );
-    send_response(client_socket, 403, "Forbidden", "text/html", body, strlen(body));
-}
-
-int main () {
-    int server = socket(AF_INET, SOCK_STREAM, 0);
-    if (server < 0) {
-        perror("Socket creation failed");
-        return 1;
-    }
-
-    //socket reuse
-    int opt = 1;
-    if (setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        perror("setsockopt failed");
-    }
-
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(8080);
-
-    if (bind(server, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        perror("Bind failed");
-        close(server);
-        return 1;
-    }
-
-    if (listen(server, 3) < 0) {
-        perror("Listen failed");
-        close(server);
-        return 1;
-    }
-
-    printf("Server is listening on http://localhost:8080\n");
-    printf("Serving files from current directory\n");
-    printf("Security: Path traversal protection enabled\n\n");
-
-    while (true) {
-        int client_accept = accept(server, NULL, NULL);
-        if (client_accept < 0) {
-            perror("Accept failed");
-            continue;
-        }
-
-        char buffer[4096] = {0};
-        ssize_t bytes_read = read(client_accept, buffer, sizeof(buffer) - 1);
-
-        if (bytes_read > 0) {
-            HTTPRequest request;
-            if (parse_http_request(buffer, &request)) {
-                printf("Request: %s %s\n", request.method, request.path);
-
-                //handle GET requests
-                if (strcmp(request.method, "GET") != 0) {
-                    const char* error_body =
-                        "<!DOCTYPE html>"
-                        "<html lang=\"en\">"
-                        "<head>"
-                        "<meta charset=\"UTF-8\">"
-                        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-                        "<title>405 Method Not Allowed</title>"
-                        "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
-                        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
-                        "</head>"
-                        "<body class=\"bg-light\">"
-                        "<div class=\"container\">"
-                        "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
-                        "<div class=\"col-md-6\">"
-                        "<div class=\"card shadow text-center\">"
-                        "<div class=\"card-body p-5\">"
-                        "<i class=\"bi bi-x-circle text-danger\" style=\"font-size: 4rem;\"></i>"
-                        "<h1 class=\"display-4 mt-3\">405</h1>"
-                        "<h2 class=\"h4 text-muted\">Method Not Allowed</h2>"
-                        "<p class=\"mt-3\">The request method is not supported for this resource.</p>"
-                        "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
-                        "</div></div></div></div></div>"
-                        "</body></html>";
-                    send_response(client_accept, 405, "Method Not Allowed", "text/html",
-                                error_body, strlen(error_body));
-                    printf("  -> 405 Method Not Allowed\n\n");
-                    close(client_accept);
-                    continue;
-                }
-
-                // Validate path for security
-                if (!is_safe_path(request.path)) {
-                    send_403(client_accept, request.path);
-                    printf("  -> 403 Forbidden (invalid path)\n\n");
-                    close(client_accept);
-                    continue;
-                }
-
-                char filepath[512];
-                if (strcmp(request.path, "/") == 0) {
-                    snprintf(filepath, sizeof(filepath), "./index.html");
-                } else {
-
-                    snprintf(filepath, sizeof(filepath), ".%s", request.path);
-                }
-
-                size_t file_size;
-                char* file_content = read_file(filepath, &file_size);
-
-                if (file_content) {
-                    const char* mime_type = get_mime_type(filepath);
-                    send_response(client_accept, 200, "OK", mime_type,
-                                file_content, file_size);
-                    printf("  -> 200 OK (%s, %zu bytes)\n\n", mime_type, file_size);
-                    free(file_content);
-                } else {
-                    send_404(client_accept, request.path);
-                    printf("  -> 404 Not Found\n\n");
-                }
-
-            } else {
-                const char* error_body =
-                    "<!DOCTYPE html>"
-                    "<html lang=\"en\">"
-                    "<head>"
-                    "<meta charset=\"UTF-8\">"
-                    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-                    "<title>400 Bad Request</title>"
-                    "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
-                    "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
-                    "</head>"
-                    "<body class=\"bg-light\">"
-                    "<div class=\"container\">"
-                    "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
-                    "<div class=\"col-md-6\">"
-                    "<div class=\"card shadow text-center\">"
-                    "<div class=\"card-body p-5\">"
-                    "<i class=\"bi bi-bug text-warning\" style=\"font-size: 4rem;\"></i>"
-                    "<h1 class=\"display-4 mt-3\">400</h1>"
-                    "<h2 class=\"h4 text-muted\">Bad Request</h2>"
-                    "<p class=\"mt-3\">The server could not understand the request.</p>"
-                    "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
-                    "</div></div></div></div></div>"
-                    "</body></html>";
-                send_response(client_accept, 400, "Bad Request", "text/html",
-                            error_body, strlen(error_body));
-                printf("ERROR: Failed to parse request\n\n");
-            }
-        }
-
-        close(client_accept);
-    }
-
-    close(server);
     return 0;
 }

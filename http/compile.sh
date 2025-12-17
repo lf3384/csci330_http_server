@@ -1,18 +1,25 @@
 #!/bin/bash
 
-echo "==================================="
-echo "Compiling C++ HTTP Server..."
-echo "==================================="
+echo "Compiling C++ HTTP Server (Phase 4)..."
+echo "======================================="
 
-# Compile with warnings enabled
-g++ -std=c++17 -Wall -Wextra -o main main.cpp
+# Compile all source files
+g++ -std=c++11 -Wall -Wextra -o server \
+    main.cpp \
+    ConfigManager.cpp \
+    HTTPRequest.cpp \
+    HTTPResponse.cpp \
+    FileHandler.cpp \
+    HTTPServer.cpp
 
-# Check if compilation succeeded
 if [ $? -eq 0 ]; then
     echo "✓ Compilation successful!"
     echo ""
-    echo "Run the server with: ./main"
-    echo "Then visit: http://localhost:8080"
+    echo "To run the server:"
+    echo "  ./server"
+    echo ""
+    echo "Or with custom config:"
+    echo "  ./server my_config.ini"
 else
     echo "✗ Compilation failed!"
     exit 1

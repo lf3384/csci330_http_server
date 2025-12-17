@@ -3,89 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C++ HTTP Server - Home</title>
+    <title>C++ HTTP Server</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/">
+            <span class="navbar-brand mb-0 h1">
                 <i class="bi bi-server"></i> C++ HTTP Server
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/test_page.html">Test Page</a>
-                    </li>
-                </ul>
-            </div>
+            </span>
         </div>
     </nav>
 
     <div class="container my-5">
         <div class="row">
             <div class="col-lg-8 mx-auto">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h1 class="card-title text-primary mb-3">
-                            <i class="bi bi-rocket-takeoff"></i> C++ HTTP Server
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h1 class="card-title mb-4">
+                            <i class="bi bi-check-circle text-success"></i> 
+                            Server Running Successfully!
                         </h1>
-                        <p class="lead">Welcome! Your HTTP server is running successfully.</p>
-
-                        <hr class="my-4">
-
-                        <h2 class="h4 mb-3">
-                            <i class="bi bi-files"></i> Available Pages:
-                        </h2>
-                        <ul class="list-group mb-4">
-                            <li class="list-group-item">
-                                <a href="/" class="text-decoration-none">
-                                    <i class="bi bi-house-door"></i> Home (index.html)
-                                </a>
-                            </li>
-                            <li class="list-group-item">
-                                <a href="/test_page.html" class="text-decoration-none">
-                                    <i class="bi bi-file-earmark-text"></i> Test Page
-                                </a>
-                            </li>
-                        </ul>
-
-                        <h2 class="h4 mb-3">
-                            <i class="bi bi-check2-circle"></i> Server Features:
-                        </h2>
-                        <ul class="list-group mb-4">
-                            <li class="list-group-item d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                HTTP Request Parsing
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                Static File Serving
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                MIME Type Detection
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                404 Error Handling
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                405 Method Not Allowed
-                            </li>
-                        </ul>
-
-                        <div class="alert alert-info mb-0" role="alert">
+                        
+                        <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i>
-                            Server running on <strong>port 8080</strong>
+                            Welcome to the HTTP Server
+                        </div>
+
+                        <h2 class="h4 mt-4 mb-3">Available Pages</h2>
+                        <ul class="list-group mb-4">
+                            <li class="list-group-item">
+                                <i class="bi bi-house-door"></i>
+                                <strong>Home</strong> - This page
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-file-text"></i>
+                                <a href="/test_page.html">Test Page</a>
+                            </li>
+                        </ul>
+
+                        <h2 class="h4 mt-4 mb-3">Test Error Handling</h2>
+                        <div class="d-grid gap-2">
+                            <a href="/nonexistent.html" class="btn btn-outline-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Test 404 Error
+                            </a>
+                            <a href="/../etc/passwd" class="btn btn-outline-danger">
+                                <i class="bi bi-shield-lock"></i> Test Path Traversal (403)
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -93,12 +58,11 @@
         </div>
     </div>
 
-    <footer class="bg-dark text-white mt-5 py-4">
-        <div class="container text-center">
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
             <p class="mb-0">
-                <i class="bi bi-code-slash"></i> Built with C++ |
-                <i class="bi bi-heart-fill text-danger"></i>
-                Styled with Bootstrap 5
+                <i class="bi bi-code-slash"></i> 
+                C++ HTTP Server - CSCI330
             </p>
         </div>
     </footer>
