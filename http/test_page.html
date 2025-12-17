@@ -1,11 +1,94 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Test Page</title>
-    <body>
-    <h2>Test page for C++ HTTP Server</h2>
-    Hello World!
-    <button onlick="test()">Send Test</button>
-    </body>
-  </head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page - C++ HTTP Server</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-server"></i> C++ HTTP Server
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/test_page.html">Test Page</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h4 mb-0">
+                            <i class="bi bi-flask"></i> Test Page for C++ HTTP Server
+                        </h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-success mb-4" role="alert">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <strong>Hello World!</strong> This page loaded successfully from your C++ HTTP server.
+                        </div>
+
+                        <h3 class="h5 mb-3">Interactive Test</h3>
+                        <p class="text-muted">Click the button below to test JavaScript functionality:</p>
+
+                        <button class="btn btn-lg btn-primary" onclick="test()">
+                            <i class="bi bi-send-fill"></i> Send Test
+                        </button>
+
+                        <div id="result" class="mt-4"></div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2">
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="bi bi-code-slash"></i> Built with C++ |
+                <i class="bi bi-heart-fill text-danger"></i>
+                Styled with Bootstrap 5
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function test() {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.innerHTML = `
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong>Test successful!</strong> Button clicked at ${timestamp}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    </script>
+</body>
 </html>

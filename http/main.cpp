@@ -119,22 +119,60 @@ void send_response(int client_socket, int status_code, const char* status_text,
 }
 
 void send_404(int client_socket, const char* path) {
-    char body[1024];
+    char body[2048];
     snprintf(body, sizeof(body),
-        "<!DOCTYPE html><html><head><title>404 Not Found</title></head>"
-        "<body><h1>404 - Not Found</h1>"
-        "<p>The requested file <code>%s</code> was not found.</p></body></html>",
+        "<!DOCTYPE html>"
+        "<html lang=\"en\">"
+        "<head>"
+        "<meta charset=\"UTF-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+        "<title>404 Not Found</title>"
+        "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
+        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
+        "</head>"
+        "<body class=\"bg-light\">"
+        "<div class=\"container\">"
+        "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
+        "<div class=\"col-md-6\">"
+        "<div class=\"card shadow text-center\">"
+        "<div class=\"card-body p-5\">"
+        "<i class=\"bi bi-exclamation-triangle text-warning\" style=\"font-size: 4rem;\"></i>"
+        "<h1 class=\"display-4 mt-3\">404</h1>"
+        "<h2 class=\"h4 text-muted\">Not Found</h2>"
+        "<p class=\"mt-3\">The requested file <code class=\"text-danger\">%s</code> was not found on this server.</p>"
+        "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
+        "</div></div></div></div></div>"
+        "</body></html>",
         path
     );
     send_response(client_socket, 404, "Not Found", "text/html", body, strlen(body));
 }
 
 void send_403(int client_socket, const char* path) {
-    char body[1024];
+    char body[2048];
     snprintf(body, sizeof(body),
-        "<!DOCTYPE html><html><head><title>403 Forbidden</title></head>"
-        "<body><h1>403 - Forbidden</h1>"
-        "<p>Access to <code>%s</code> is forbidden.</p></body></html>",
+        "<!DOCTYPE html>"
+        "<html lang=\"en\">"
+        "<head>"
+        "<meta charset=\"UTF-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+        "<title>403 Forbidden</title>"
+        "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
+        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
+        "</head>"
+        "<body class=\"bg-light\">"
+        "<div class=\"container\">"
+        "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
+        "<div class=\"col-md-6\">"
+        "<div class=\"card shadow text-center\">"
+        "<div class=\"card-body p-5\">"
+        "<i class=\"bi bi-shield-lock text-danger\" style=\"font-size: 4rem;\"></i>"
+        "<h1 class=\"display-4 mt-3\">403</h1>"
+        "<h2 class=\"h4 text-muted\">Forbidden</h2>"
+        "<p class=\"mt-3\">Access to <code class=\"text-danger\">%s</code> is forbidden.</p>"
+        "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
+        "</div></div></div></div></div>"
+        "</body></html>",
         path
     );
     send_response(client_socket, 403, "Forbidden", "text/html", body, strlen(body));
@@ -191,7 +229,29 @@ int main () {
 
                 //handle GET requests
                 if (strcmp(request.method, "GET") != 0) {
-                    const char* error_body = "<!DOCTYPE html><html><body><h1>405 Method Not Allowed</h1></body></html>";
+                    const char* error_body =
+                        "<!DOCTYPE html>"
+                        "<html lang=\"en\">"
+                        "<head>"
+                        "<meta charset=\"UTF-8\">"
+                        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                        "<title>405 Method Not Allowed</title>"
+                        "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
+                        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
+                        "</head>"
+                        "<body class=\"bg-light\">"
+                        "<div class=\"container\">"
+                        "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
+                        "<div class=\"col-md-6\">"
+                        "<div class=\"card shadow text-center\">"
+                        "<div class=\"card-body p-5\">"
+                        "<i class=\"bi bi-x-circle text-danger\" style=\"font-size: 4rem;\"></i>"
+                        "<h1 class=\"display-4 mt-3\">405</h1>"
+                        "<h2 class=\"h4 text-muted\">Method Not Allowed</h2>"
+                        "<p class=\"mt-3\">The request method is not supported for this resource.</p>"
+                        "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
+                        "</div></div></div></div></div>"
+                        "</body></html>";
                     send_response(client_accept, 405, "Method Not Allowed", "text/html",
                                 error_body, strlen(error_body));
                     printf("  -> 405 Method Not Allowed\n\n");
@@ -230,7 +290,29 @@ int main () {
                 }
 
             } else {
-                const char* error_body = "<!DOCTYPE html><html><body><h1>400 Bad Request</h1></body></html>";
+                const char* error_body =
+                    "<!DOCTYPE html>"
+                    "<html lang=\"en\">"
+                    "<head>"
+                    "<meta charset=\"UTF-8\">"
+                    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                    "<title>400 Bad Request</title>"
+                    "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">"
+                    "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css\">"
+                    "</head>"
+                    "<body class=\"bg-light\">"
+                    "<div class=\"container\">"
+                    "<div class=\"row justify-content-center align-items-center\" style=\"min-height: 100vh;\">"
+                    "<div class=\"col-md-6\">"
+                    "<div class=\"card shadow text-center\">"
+                    "<div class=\"card-body p-5\">"
+                    "<i class=\"bi bi-bug text-warning\" style=\"font-size: 4rem;\"></i>"
+                    "<h1 class=\"display-4 mt-3\">400</h1>"
+                    "<h2 class=\"h4 text-muted\">Bad Request</h2>"
+                    "<p class=\"mt-3\">The server could not understand the request.</p>"
+                    "<a href=\"/\" class=\"btn btn-primary mt-3\"><i class=\"bi bi-house-door\"></i> Go Home</a>"
+                    "</div></div></div></div></div>"
+                    "</body></html>";
                 send_response(client_accept, 400, "Bad Request", "text/html",
                             error_body, strlen(error_body));
                 printf("ERROR: Failed to parse request\n\n");
