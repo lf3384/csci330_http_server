@@ -6,12 +6,14 @@
 #include "FileHandler.h"
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
+#include "Logger.h"
 
 class HTTPServer {
 private:
     int server_socket;
     ConfigManager* config;
     FileHandler* fileHandler;
+    Logger* logger;
     bool running;
     
     // Socket operations

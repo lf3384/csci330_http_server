@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 
 HTTPServer::HTTPServer() 
-    : server_socket(-1), config(nullptr), fileHandler(nullptr), running(false) {
+    : server_socket(-1), config(nullptr), fileHandler(nullptr), logger(nullptr), running(false) {
 }
 
 HTTPServer::~HTTPServer() {
@@ -68,6 +68,9 @@ bool HTTPServer::initialize() {
         config = ConfigManager::getInstance();
     }
     
+    // Get logger instance
+    logger = Logger::getInstance();
+    
     // Create file handler
     fileHandler = new FileHandler(config->getDocumentRoot(), config->getMaxFileSize());
     
@@ -112,6 +115,13 @@ void HTTPServer::handleClient(int client_socket) {
         return;
     }
     
+    // Get client IP (for logging)
+    struct sockaddr_in client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+    getpeername(client_socket, (struct sockaddr*)&client_addr, &addr_len);
+    char client_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+    
     // Parse request
     std::string rawRequest(buffer, bytes_read);
     HTTPRequest request(rawRequest);
@@ -122,9 +132,9 @@ void HTTPServer::handleClient(int client_socket) {
     // Send response
     response.send(client_socket);
     
-    // Log response
-    std::cout << "  Status: " << response.getStatusCode() << std::endl;
-    std::cout << std::endl;
+    // Log the request (replaces old console logging)
+    logger->logRequest(client_ip, request.getMethod(), request.getPath(), 
+                      response.getStatusCode(), response.getStatusText());
     
     close(client_socket);
 }

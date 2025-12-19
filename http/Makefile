@@ -3,9 +3,9 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic
 TARGET = server
-SOURCES = main.cpp ConfigManager.cpp HTTPRequest.cpp HTTPResponse.cpp FileHandler.cpp HTTPServer.cpp
+SOURCES = main.cpp ConfigManager.cpp HTTPRequest.cpp HTTPResponse.cpp FileHandler.cpp HTTPServer.cpp Logger.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
-HEADERS = ConfigManager.h HTTPRequest.h HTTPResponse.h FileHandler.h HTTPServer.h
+HEADERS = ConfigManager.h HTTPRequest.h HTTPResponse.h FileHandler.h HTTPServer.h Logger.h
 
 # Default target
 all: $(TARGET)

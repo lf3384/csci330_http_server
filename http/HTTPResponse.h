@@ -21,6 +21,7 @@ public:
     void setStatus(int code);
     void setStatus(int code, const std::string& text);
     int getStatusCode() const { return status_code; }
+    std::string getStatusText() const { return status_text; }
     
     // Headers
     void setHeader(const std::string& name, const std::string& value);

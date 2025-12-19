@@ -10,7 +10,8 @@ g++ -std=c++11 -Wall -Wextra -o server \
     HTTPRequest.cpp \
     HTTPResponse.cpp \
     FileHandler.cpp \
-    HTTPServer.cpp
+    HTTPServer.cpp \
+    Logger.cpp
 
 if [ $? -eq 0 ]; then
     echo "✓ Compilation successful!"
