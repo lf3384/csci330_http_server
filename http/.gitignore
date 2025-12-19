@@ -1,0 +1,24 @@
+# Compiled binaries
+server
+main
+*.o
+*.out
+*.exe
+
+# Log files
+server.log
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Backup files
+*~
+*.bak
